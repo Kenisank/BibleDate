@@ -11,7 +11,7 @@ const SITE_URL = "https://bibledate.vercel.app"; // e.g. https://your-site.verce
 const ADMIN_KEY = "biblearomdate2026"; // must match ADMIN_PASSCODE in the HTML file, exactly
 // --------------------------------------
 
-const WA_NUMBER = "2348186432475"; // Crave & Crumb WhatsApp for event orders
+const WA_NUMBER = "2348034503111"; // Crave & Crumb WhatsApp for event orders
 const SUPPORT_PHONE = "0803 875 8275";
 
 const HEADERS = [
