@@ -7,7 +7,7 @@ const EVENT_NAME = "Bible Date — Beyond the Pulpit";
 const EVENT_DATE = "Friday 25th September 2026, 3PM";
 const EVENT_VENUE =
   "KSDPC ESTATE MAIGERO AFTER MAMAS BUKA BEFORE FREEDOM HOTEL, TYK SCHOOL, U/Maigero, Kaduna State";
-const SITE_URL = "PASTE_YOUR_DEPLOYED_SITE_URL_HERE"; // e.g. https://your-site.vercel.app/bible-date-registration.html
+const SITE_URL = "https://bibledate.vercel.app"; // e.g. https://your-site.vercel.app/bible-date-registration.html
 const ADMIN_KEY = "biblearomdate2026"; // must match ADMIN_PASSCODE in the HTML file, exactly
 // --------------------------------------
 
