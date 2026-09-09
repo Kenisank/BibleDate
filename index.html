@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bible Date — Beyond the Pulpit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #081310;
+    --bg-glow: radial-gradient(ellipse 60% 40% at 20% 0%, rgba(111,203,83,0.16), transparent 60%),
+               radial-gradient(ellipse 50% 35% at 100% 30%, rgba(111,203,83,0.10), transparent 60%),
+               var(--bg);
+    --surface: #0F211A;
+    --surface-raised: #142A21;
+    --border: rgba(243,241,231,0.10);
+    --border-strong: rgba(243,241,231,0.20);
+    --accent: #6FCB53;
+    --accent-deep: #2F6B3D;
+    --text: #F3F1E7;
+    --muted: #A9BBAE;
+    --error: #C75450;
+    --radius: 14px;
+  }
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html{ -webkit-text-size-adjust: 100%; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg-glow);
+    background-attachment: fixed;
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    min-height: 100vh;
+    display:flex;
+    justify-content:center;
+    padding: 40px 16px 64px;
+    line-height:1.5;
+  }
+  .wrap{ width:100%; max-width: 560px; }
+  .eventhead{ text-align:left; margin-bottom: 28px; }
+  .eventhead .when{
+    font-size: 13px; letter-spacing: 0.02em; color: var(--muted); margin-bottom: 10px;
+  }
+  .eventhead h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: clamp(34px, 9vw, 54px);
+    line-height: 0.95;
+    margin: 0 0 6px 0;
+    color: var(--text);
+  }
+  .eventhead .sub{
+    font-family:'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+    font-size: clamp(17px, 4vw, 21px);
+    margin: 0;
+  }
+  .steps{
+    display:flex; gap:8px; margin: 26px 0 18px;
+  }
+  .step-dot{
+    flex:1; height:3px; border-radius:2px; background: var(--border-strong);
+  }
+  .step-dot.active{ background: var(--accent); }
+  .step-dot.done{ background: var(--accent-deep); }
+  .stepline{
+    font-size: 12px; color: var(--muted); margin-bottom: 24px;
+  }
+  .card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+  .card h2{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: 24px;
+    margin: 0 0 4px 0;
+  }
+  .card .helper{
+    color: var(--muted); font-size: 14px; margin: 0 0 22px 0;
+  }
+  label{
+    display:block; font-size: 13px; color: var(--muted); margin: 18px 0 6px;
+  }
+  label:first-of-type{ margin-top:0; }
+  input[type=text], input[type=tel], input[type=email], textarea{
+    width:100%;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family:'Manrope', sans-serif;
+    font-size:16px; /* 16px avoids iOS auto-zoom on focus */
+    outline:none;
+  }
+  input:focus, textarea:focus{ border-color: var(--accent); }
+  textarea{ min-height: 90px; resize: vertical; }
+  .fieldnote{ font-size:12px; color: var(--muted); margin-top:6px; }
+  .err{ color: var(--error); font-size: 12px; margin-top: 6px; display:none; }
+  .err.show{ display:block; }
+  input.invalid, textarea.invalid{ border-color: var(--error); }
+
+  .foodgroup{ margin-top: 22px; }
+  .foodgroup > h3{
+    font-size: 12px; letter-spacing: 0.03em; color: var(--muted);
+    border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .fooditem{
+    display:flex; align-items:flex-start; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .fooditem:last-child{ border-bottom: none; }
+  .fooditem input[type=checkbox]{
+    margin-top: 3px; width:19px; height:19px; accent-color: var(--accent); flex-shrink:0;
+  }
+  .fooditem .fname{ font-size: 15px; color: var(--text); }
+  .fooditem .fprice{ font-size: 13px; margin-top:2px; }
+  .fooditem .fprice .was{ text-decoration: line-through; color: var(--muted); margin-right:6px; }
+  .fooditem .fprice .now{ color: var(--accent); font-weight:600; }
+  .fooditem .fmeta{ flex:1; }
+
+  .totalbar{
+    margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border-strong);
+    display:flex; justify-content:space-between; align-items:baseline;
+  }
+  .totalbar .label{ color: var(--muted); font-size: 13px; }
+  .totalbar .amount{ font-family:'Fraunces', serif; font-size: 22px; color: var(--accent); }
+
+  .btnrow{ display:flex; gap: 10px; margin-top: 26px; }
+  button{
+    font-family:'Manrope', sans-serif; font-weight:600; font-size: 15px;
+    border-radius: 9px; padding: 13px 18px; cursor:pointer; border:1px solid transparent;
+    -webkit-appearance:none;
+  }
+  .btn-primary{ background: var(--accent); color: #08170F; flex:1; }
+  .btn-primary:hover{ background:#7fda63; }
+  .btn-primary:disabled{ opacity:0.6; cursor:not-allowed; }
+  .btn-secondary{ background: transparent; color: var(--text); border-color: var(--border-strong); }
+  .btn-secondary:hover{ border-color: var(--accent); }
+
+  .contactline{
+    margin-top: 22px; font-size: 13px; color: var(--muted); text-align:center;
+  }
+  .contactline b{ color: var(--text); font-weight:600; }
+
+  .confirm{ text-align:center; padding: 12px 0; }
+  .confirm .check{
+    width:52px; height:52px; border-radius:50%; background: var(--accent-deep);
+    display:flex; align-items:center; justify-content:center; margin: 0 auto 18px;
+  }
+  .confirm h2{ margin-bottom: 10px; }
+  .confirm p{ color: var(--muted); font-size: 14px; }
+  .summary{
+    text-align:left; background: var(--surface-raised); border:1px solid var(--border);
+    border-radius: 10px; padding: 16px; margin-top: 20px; font-size: 14px;
+  }
+  .summary div{ padding: 4px 0; word-break: break-word; }
+  .summary .k{ color: var(--muted); }
+
+  .footlinks{
+    display:flex; justify-content:center; gap:20px; margin-top: 18px; font-size:12px; flex-wrap:wrap;
+  }
+  .footlinks a{ color: var(--muted); text-decoration: underline; cursor:pointer; }
+  .footlinks a:hover{ color: var(--text); }
+
+  .badge{
+    display:inline-block; font-size: 12px; font-weight:600; padding: 3px 10px; border-radius: 20px;
+  }
+  .badge.yes{ background: rgba(111,203,83,0.16); color: var(--accent); }
+  .badge.no{ background: rgba(199,84,80,0.14); color: var(--error); }
+  .badge.buy{ background: rgba(243,241,231,0.08); color: var(--text); }
+
+  .hidden{ display:none !important; }
+  .loading{ color: var(--muted); font-size: 13px; }
+
+  /* Small text buttons inside admin rows (Resend / code) */
+  .linkbtn{
+    background:none; border:none; padding:2px 0; color:var(--accent);
+    font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline;
+  }
+  .linkbtn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .micro{ display:block; font-size:11px; color:var(--muted); margin-top:2px; word-break:break-word; }
+
+  /* Admin table */
+  .table-wrap{ overflow-x:auto; margin-top:14px; -webkit-overflow-scrolling:touch; }
+  #admin-table{ width:100%; border-collapse: collapse; font-size:13px; min-width: 900px; }
+  #admin-table th, #admin-table td{ text-align:left; padding:10px 8px; border-bottom:1px solid var(--border); vertical-align:top; }
+  #admin-table th{ color: var(--muted); font-weight:600; font-size:11px; text-transform:uppercase; white-space:nowrap; }
+  #admin-table tbody tr:hover{ background: rgba(243,241,231,0.03); }
+  #admin-table .nowrap{ white-space:nowrap; }
+
+  @media (max-width: 700px){
+    .table-wrap{ overflow-x:visible; margin-top:16px; }
+    #admin-table{ min-width:0; }
+    #admin-table thead{ display:none; }
+    #admin-table, #admin-table tbody, #admin-table tr, #admin-table td{ display:block; width:100%; }
+    #admin-table tr{
+      border:1px solid var(--border); border-radius:12px; margin-bottom:14px;
+      padding: 4px 14px; background: var(--surface-raised);
+    }
+    #admin-table td{
+      border-bottom:1px solid var(--border); padding:10px 0;
+      display:flex; justify-content:space-between; align-items:flex-start; gap:14px;
+    }
+    #admin-table td:last-child{ border-bottom:none; }
+    #admin-table td::before{
+      content: attr(data-label); color: var(--muted); font-size:11px; letter-spacing:0.02em;
+      text-transform:uppercase; flex-shrink:0; padding-top:2px;
+    }
+    #admin-table td span.tdval{ text-align:right; }
+  }
+
+  @media (max-width: 480px){
+    body{ padding: 24px 12px 48px; }
+    .card{ padding: 20px; }
+    .btnrow{ flex-direction:column; }
+    .btnrow button{ width:100%; }
+    .totalbar{ flex-direction:column; align-items:flex-start; gap:4px; }
+  }
+
+  @media (min-width: 701px) and (max-width: 1024px){
+    .wrap{ max-width: 600px; }
+  }
+
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eventhead">
+    <div class="when">Friday 25th September 2026 · 3PM</div>
+    <h1>Bible Date</h1>
+    <p class="sub">Beyond the Pulpit</p>
+  </div>
+
+  <!-- REGISTRATION FLOW -->
+  <div id="app">
+    <div class="steps">
+      <div class="step-dot active" data-step="1"></div>
+      <div class="step-dot" data-step="2"></div>
+      <div class="step-dot" data-step="3"></div>
+    </div>
+    <div class="stepline" id="stepline">Step 1 of 3 — Your details</div>
+
+    <div class="card" id="step1">
+      <h2>Reserve your spot</h2>
+      <p class="helper">Discussion, questions, fellowship, and deeper conversation.</p>
+
+      <label for="f-name">Full name</label>
+      <input type="text" id="f-name" placeholder="e.g. Amaka Johnson">
+      <div class="err" id="err-name">Please enter your full name.</div>
+
+      <label for="f-phone">Phone number</label>
+      <input type="tel" id="f-phone" placeholder="e.g. 0803 000 0000">
+      <div class="err" id="err-phone">Please enter a valid phone number.</div>
+
+      <label for="f-address">Address</label>
+      <input type="text" id="f-address" placeholder="Where are you coming from?">
+      <div class="err" id="err-address">Please enter your address.</div>
+
+      <label for="f-question">What would you like treated on this date?</label>
+      <textarea id="f-question" placeholder="Share a question or topic you'd like discussed..."></textarea>
+      <div class="fieldnote">Optional, but this helps shape the conversation.</div>
+
+      <label for="f-email">Email address</label>
+      <input type="email" id="f-email" placeholder="you@example.com">
+      <div class="fieldnote">Your access code, venue and event details will be sent here once verified.</div>
+      <div class="err" id="err-email">Please enter a valid email address.</div>
+
+      <div class="btnrow">
+        <button class="btn-primary" id="to-step2">Continue to food selection</button>
+      </div>
+      <div class="contactline">For further information, call <b>0803 875 8275</b></div>
+    </div>
+
+
+    <div class="card hidden" id="step2">
+      <h2>Choose what you'd like to eat</h2>
+      <p class="helper">Rice is on the house. Everything else below is Crave &amp; Crumb, at a special event discount, courtesy of Amanda.</p>
+
+      <div class="foodgroup">
+        <h3>Included</h3>
+        <div class="fooditem rice">
+          <input type="checkbox" id="food-rice" checked>
+          <div class="fmeta">
+            <div class="fname">Rice</div>
+            <div class="fprice"><span class="now">Free</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="food-groups"></div>
+
+      <div class="totalbar">
+        <span class="label">Your discounted total</span>
+        <span class="amount" id="total-amount">₦0</span>
+      </div>
+
+      <div class="btnrow">
+        <button class="btn-secondary" id="back-step1">Back</button>
+        <button class="btn-primary" id="to-step3">Complete registration</button>
+      </div>
+      <div class="err" id="err-submit"></div>
+    </div>
+
+    <div class="card hidden" id="step3">
+      <div class="confirm">
+        <div class="check">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 12.5L9.5 18L20 6" stroke="#F3F1E7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h2>You're registered</h2>
+        <p id="confirm-note">We've saved your registration and emailed a confirmation. Once we verify you, we'll send your access code, venue, date and time, plus a link to check your status. If you have food in your order, keep an eye on the WhatsApp chat with Crave &amp; Crumb to complete payment. For anything urgent, call <b style="color:var(--text)">0803 875 8275</b>.</p>
+        <div id="confirm-email-note" class="err"></div>
+        <div class="summary" id="summary-box"></div>
+      </div>
+    </div>
+
+    <div class="footlinks">
+      <a id="lookup-toggle">My registration</a>
+      <a id="admin-toggle">Organizer view</a>
+    </div>
+  </div>
+
+  <!-- MY REGISTRATION LOOKUP -->
+  <div class="card hidden" id="lookup-panel">
+    <button class="btn-secondary" id="lookup-home">&larr; Back to home page</button>
+    <h2 style="margin-top:18px;">My registration</h2>
+    <p class="helper">Enter the access code from your verification email to see your status.</p>
+
+    <div id="lookup-gate">
+      <label for="lookup-code">Access code</label>
+      <input type="text" id="lookup-code" placeholder="e.g. A1B2C3" style="text-transform:uppercase;">
+      <div class="err" id="lookup-err">We couldn't find a verified registration with that code.</div>
+      <div class="btnrow"><button class="btn-primary" id="lookup-submit">View my status</button></div>
+    </div>
+
+    <div id="lookup-result" class="summary hidden"></div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div class="card hidden" id="admin-panel">
+    <button class="btn-secondary" id="admin-home">&larr; Back to home page</button>
+    <h2 style="margin-top:18px;">Registrations</h2>
+    <p class="helper">Visible to anyone with this link who enters the passcode — treat it as internal only.</p>
+    <div id="admin-gate">
+      <label for="admin-pass">Passcode</label>
+      <input type="text" id="admin-pass" placeholder="Enter passcode">
+      <div class="btnrow"><button class="btn-primary" id="admin-unlock">View registrations</button></div>
+    </div>
+    <div id="admin-content" class="hidden">
+      <div class="loading" id="admin-loading">Loading...</div>
+      <div class="table-wrap">
+        <table class="hidden" id="admin-table">
+          <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Address</th><th>Question</th><th>Food</th><th>Total</th><th>Code</th><th>Verified</th><th>Order</th><th></th></tr></thead>
+          <tbody id="admin-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<script>
+const DISCOUNT = 0.20; // 20% off Crave & Crumb items for this event — adjust if a different rate is agreed
+const ADMIN_PASSCODE = "biblearomdate2026"; // change this — must match ADMIN_KEY in the Apps Script backend
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbz21Zr7cKmMQOE8S-Rs3lsD88PZLlEumPD53F51HgaRkhEVQlqMWQ8OqWqCZe-ywRsGxQ/exec"; // see SETUP.md
+
+const MENU = {
+  "Baked Goods": [
+    { name: "Banana Bread", price: 1500 },
+    { name: "Mini Banana Bread", price: 1500 },
+    { name: "Cookies (box of 4)", price: 3500 },
+    { name: "Cupcakes", price: 1200 },
+    { name: "Glazed Puff Puff", price: 2000 },
+  ],
+  "Drinks": [
+    { name: "Chapman", price: 1500 },
+  ],
+  "Cakes": [
+    { name: "Cake Slice", price: 4000 },
+    { name: "Cake Parfait", price: 4000 },
+    { name: "Bento Cake", price: 8000 },
+    { name: "Cake (6\")", price: 15000 },
+    { name: "Cake (8\")", price: 20000 },
+  ],
+  "Savoury": [
+    { name: "Loaded Fries", price: 6000 },
+    { name: "Chicken Shawarma", price: 4500 },
+    { name: "Breakfast Combo", price: 5000 },
+    { name: "The Crave Combo", price: 10000 },
+  ]
+};
+
+function naira(n){ return "₦" + Number(n).toLocaleString("en-NG"); }
+function escapeHtml(str){
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ---------- Build food selection UI ----------
+const foodGroupsEl = document.getElementById('food-groups');
+let itemIdCounter = 0;
+const itemRefs = [];
+Object.entries(MENU).forEach(([group, items]) => {
+  const groupEl = document.createElement('div');
+  groupEl.className = 'foodgroup';
+  const h3 = document.createElement('h3');
+  h3.textContent = group;
+  groupEl.appendChild(h3);
+  items.forEach(item => {
+    const discounted = Math.round(item.price * (1 - DISCOUNT));
+    const id = 'food-' + (itemIdCounter++);
+    const row = document.createElement('div');
+    row.className = 'fooditem';
+    row.innerHTML = `
+      <input type="checkbox" id="${id}">
+      <div class="fmeta">
+        <div class="fname">${item.name}</div>
+        <div class="fprice"><span class="was">${naira(item.price)}</span><span class="now">${naira(discounted)}</span></div>
+      </div>`;
+    groupEl.appendChild(row);
+    itemRefs.push({ id, name: item.name, original: item.price, discounted });
+  });
+  foodGroupsEl.appendChild(groupEl);
+});
+
+function updateTotal(){
+  let total = 0;
+  itemRefs.forEach(it => { if(document.getElementById(it.id).checked) total += it.discounted; });
+  document.getElementById('total-amount').textContent = naira(total);
+}
+itemRefs.forEach(it => document.getElementById(it.id).addEventListener('change', updateTotal));
+updateTotal();
+
+
+// ---------- View switching (registration / lookup / admin) ----------
+function showView(view){
+  document.getElementById('app').classList.toggle('hidden', view !== 'app');
+  document.getElementById('lookup-panel').classList.toggle('hidden', view !== 'lookup');
+  document.getElementById('admin-panel').classList.toggle('hidden', view !== 'admin');
+}
+
+function setStep(n){
+  document.querySelectorAll('.step-dot').forEach(d => {
+    const s = parseInt(d.dataset.step);
+    d.classList.toggle('active', s === n);
+    d.classList.toggle('done', s < n);
+  });
+  document.getElementById('stepline').textContent =
+    n === 1 ? 'Step 1 of 3 — Your details' :
+    n === 2 ? 'Step 2 of 3 — Food selection' :
+    'Step 3 of 3 — Confirmation';
+  document.getElementById('step1').classList.toggle('hidden', n !== 1);
+  document.getElementById('step2').classList.toggle('hidden', n !== 2);
+  document.getElementById('step3').classList.toggle('hidden', n !== 3);
+}
+
+function validateStep1(){
+  let ok = true;
+  const name = document.getElementById('f-name');
+  const phone = document.getElementById('f-phone');
+  const address = document.getElementById('f-address');
+  const email = document.getElementById('f-email');
+
+  const checks = [
+    [name, name.value.trim().length > 1],
+    [phone, /^[0-9+\s-]{7,15}$/.test(phone.value.trim())],
+    [address, address.value.trim().length > 3],
+    [email, /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())],
+  ];
+  checks.forEach(([el, valid]) => {
+    el.classList.toggle('invalid', !valid);
+    document.getElementById('err-' + el.id.replace('f-','')).classList.toggle('show', !valid);
+    if(!valid) ok = false;
+  });
+  return ok;
+}
+
+document.getElementById('to-step2').addEventListener('click', () => {
+  if(validateStep1()) setStep(2);
+});
+document.getElementById('back-step1').addEventListener('click', () => setStep(1));
+
+
+// ---------- Registration submit ----------
+const SUBMIT_BTN = document.getElementById('to-step3');
+const SUBMIT_ERR = document.getElementById('err-submit');
+let isSubmitting = false;
+
+function makeId(){
+  if(window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+  return Date.now() + '-' + Math.random().toString(36).slice(2,10);
+}
+
+function showSubmitError(msg){
+  SUBMIT_ERR.textContent = msg;
+  SUBMIT_ERR.classList.add('show');
+}
+
+function clearSubmitError(){
+  SUBMIT_ERR.textContent = '';
+  SUBMIT_ERR.classList.remove('show');
+}
+
+SUBMIT_BTN.addEventListener('click', async () => {
+  if(isSubmitting) return;
+  clearSubmitError();
+
+  const openOrderChat = function(){
+    // Keeping it simple: always give the guest the WhatsApp chat to place/confirm their food order.
+    const waText = `Hi Crave & Crumb! I'm registered for Bible Date and placing my order.\n\nName: ${document.getElementById('f-name').value.trim()}\nItems: ${foodSummary}\nTotal: ${naira(total)}`;
+    return !!window.open(`https://wa.me/2348186432475?text=${encodeURIComponent(waText)}`, '_blank');
+  };
+
+  const selectedFood = itemRefs
+    .filter(it => document.getElementById(it.id).checked)
+    .map(it => `${it.name} (${naira(it.discounted)})`);
+  const total = itemRefs.reduce((sum, it) => document.getElementById(it.id).checked ? sum + it.discounted : sum, 0);
+  const foodSummary = ['Rice (Free)', ...selectedFood].join(', ');
+
+  const registration = {
+    action: 'register',
+    id: makeId(),
+    name: document.getElementById('f-name').value.trim(),
+    phone: document.getElementById('f-phone').value.trim(),
+    address: document.getElementById('f-address').value.trim(),
+    question: document.getElementById('f-question').value.trim(),
+    email: document.getElementById('f-email').value.trim(),
+    food: ['Rice (Free)', ...selectedFood],
+    total,
+    submittedAt: new Date().toISOString()
+  };
+
+
+  // Keep the original WhatsApp behaviour: open the chat to Crave & Crumb for the order.
+  let waOpened = openOrderChat();
+
+  // Disable the button while saving so we don't double-submit, then save to the backend.
+  isSubmitting = true;
+  SUBMIT_BTN.disabled = true;
+  SUBMIT_BTN.textContent = 'Saving...';
+
+  let ok = false;
+  let emailQueued = true;
+  try{
+    const res = await fetch(SHEET_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' }, // avoids a CORS preflight against Apps Script
+      body: JSON.stringify(registration)
+    });
+    const result = await res.json();
+    ok = !!(result && result.ok);
+    if(result && typeof result.emailQueued === 'boolean') emailQueued = result.emailQueued;
+    if(!ok){
+      const why = (result && result.error) || 'Sorry, please try again.';
+      showSubmitError('We couldn\'t save your registration. ' + why);
+    }
+  }catch(err){
+    console.error('Could not save registration', err);
+    showSubmitError('We couldn\'t reach the server. Please check your connection and try again.');
+  }
+
+  if(!ok){
+    isSubmitting = false;
+    SUBMIT_BTN.disabled = false;
+    SUBMIT_BTN.textContent = 'Complete registration';
+    return;
+  }
+
+  const summaryBox = document.getElementById('summary-box');
+  summaryBox.innerHTML = `
+    <div><span class="k">Name:</span> ${escapeHtml(registration.name)}</div>
+    <div><span class="k">Phone:</span> ${escapeHtml(registration.phone)}</div>
+    <div><span class="k">Email:</span> ${escapeHtml(registration.email)}</div>
+    <div><span class="k">Food:</span> ${escapeHtml(registration.food.join(', '))}</div>
+    <div><span class="k">Total:</span> ${naira(registration.total)}</div>
+  `;
+
+  const emailNote = document.getElementById('confirm-email-note');
+  let showNote = false;
+  if(!waOpened){
+    emailNote.textContent = 'Note: your WhatsApp order chat could not be opened automatically. Please message Crave & Crumb on 0818 643 2475 to place your food order.';
+    showNote = true;
+  } else if(!emailQueued){
+    emailNote.textContent = 'Note: your registration was saved, but the confirmation email could not be sent at this moment. For anything urgent, call 0803 875 8275.';
+    showNote = true;
+  }
+  emailNote.classList.toggle('show', showNote);
+
+  setStep(3);
+  isSubmitting = false;
+  SUBMIT_BTN.disabled = false;
+  SUBMIT_BTN.textContent = 'Complete registration';
+});
+
+// ---------- My Registration lookup ----------
+document.getElementById('lookup-toggle').addEventListener('click', () => showView('lookup'));
+document.getElementById('lookup-home').addEventListener('click', () => {
+  showView('app');
+  resetLookup();
+});
+
+function resetLookup(){
+  document.getElementById('lookup-gate').classList.remove('hidden');
+  document.getElementById('lookup-result').classList.add('hidden');
+  document.getElementById('lookup-err').classList.remove('show');
+}
+
+
+async function runLookup(code){
+  const btn = document.getElementById('lookup-submit');
+  btn.disabled = true;
+  btn.textContent = 'Checking...';
+  document.getElementById('lookup-err').classList.remove('show');
+  try{
+    const res = await fetch(`${SHEET_API_URL}?code=${encodeURIComponent(code)}`);
+    const data = await res.json();
+    if(!data || data.error){
+      document.getElementById('lookup-err').classList.add('show');
+      document.getElementById('lookup-result').classList.add('hidden');
+    } else {
+      const resultBox = document.getElementById('lookup-result');
+      resultBox.innerHTML = `
+        <div><span class="k">Name:</span> ${escapeHtml(data.name)}</div>
+        <div><span class="k">Food:</span> ${escapeHtml((data.food || []).join(', '))}</div>
+        <div><span class="k">Total:</span> ${naira(data.total || 0)}</div>
+        <div><span class="k">Verified:</span> <span class="badge ${data.verified ? 'yes' : 'no'}">${data.verified ? 'Yes' : 'Pending'}</span></div>
+        ${data.verified ? `<div><span class="k">Order:</span> <span class="badge ${data.purchased ? 'yes' : 'buy'}">${data.purchased ? 'Confirmed' : 'Not confirmed'}</span></div>` : ''}
+        ${data.verified ? `<div><span class="k">Venue:</span> ${escapeHtml(data.venue || '—')}</div><div><span class="k">Date &amp; time:</span> ${escapeHtml(data.eventDate || '—')}</div>` : ''}
+      `;
+      resultBox.classList.remove('hidden');
+      document.getElementById('lookup-gate').classList.add('hidden');
+    }
+  }catch(e){
+    document.getElementById('lookup-err').classList.add('show');
+  }
+  btn.disabled = false;
+  btn.textContent = 'View my status';
+}
+
+document.getElementById('lookup-submit').addEventListener('click', () => {
+  const code = document.getElementById('lookup-code').value.trim();
+  if(code) runLookup(code);
+});
+
+
+// Auto-open lookup if the link came with ?view=mine&code=XXXX (from the verification email)
+(function checkUrlParams(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('view') === 'mine'){
+    const code = params.get('code') || '';
+    showView('lookup');
+    document.getElementById('lookup-code').value = code;
+    if(code) runLookup(code);
+  }
+})();
+
+// ---------- Admin panel ----------
+document.getElementById('admin-toggle').addEventListener('click', () => showView('admin'));
+document.getElementById('admin-home').addEventListener('click', () => showView('app'));
+
+document.getElementById('admin-unlock').addEventListener('click', async () => {
+  const pass = document.getElementById('admin-pass').value;
+  if(pass !== ADMIN_PASSCODE){
+    alert('Incorrect passcode.');
+    return;
+  }
+  document.getElementById('admin-gate').classList.add('hidden');
+  document.getElementById('admin-content').classList.remove('hidden');
+  await loadAdminTable();
+});
+
+async function loadAdminTable(){
+  try{
+    const res = await fetch(`${SHEET_API_URL}?key=${encodeURIComponent(ADMIN_PASSCODE)}`);
+    const rows = await res.json();
+    if(rows.error){
+      document.getElementById('admin-loading').textContent = 'Not authorized to load registrations.';
+      return;
+    }
+    rows.sort((a,b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+    const tbody = document.getElementById('admin-tbody');
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td data-label="Name"><span class="tdval">${escapeHtml(r.name)}</span></td>
+        <td data-label="Phone"><span class="tdval">${escapeHtml(r.phone)}</span></td>
+        <td data-label="Email"><span class="tdval">${escapeHtml(r.email)}</span></td>
+        <td data-label="Address"><span class="tdval">${escapeHtml(r.address)}</span></td>
+        <td data-label="Question"><span class="tdval">${escapeHtml(r.question || '—')}</span></td>
+        <td data-label="Food"><span class="tdval">${escapeHtml((r.food || []).join(', '))}</span></td>
+        <td data-label="Total"><span class="tdval">${naira(r.total)}</span></td>
+        <td data-label="Code"><span class="tdval">${escapeHtml(r.accessCode || '—')}</span></td>
+        <td data-label="Verified"><input type="checkbox" class="verify-check" data-id="${escapeHtml(r.id)}" ${r.verified ? 'checked disabled' : ''} title="${r.verified ? 'Already verified' : 'Verify & email access code'}"></td>
+        <td data-label="Order"><input type="checkbox" class="purchase-check" data-id="${escapeHtml(r.id)}" ${r.purchased ? 'checked disabled' : ''} title="${r.purchased ? 'Order confirmed' : 'Mark food order as confirmed'}"></td>
+        <td data-label="Actions">
+          <button class="linkbtn resend-btn" data-id="${escapeHtml(r.id)}" ${r.verified ? '' : 'disabled'} title="${r.verified ? 'Re-send the verified email' : 'Verify first'}">${r.verified ? 'Re-send email' : '—'}</button>
+          <span class="micro">${(r.verified ? '<span class="badge yes">Verified</span> ' : '<span class="badge no">Pending</span> ')}${(r.purchased ? '<span class="badge yes">Order</span>' : '')}</span>
+        </td>
+      </tr>`).join('');
+    document.getElementById('admin-loading').classList.add('hidden');
+    document.getElementById('admin-table').classList.remove('hidden');
+
+    document.querySelectorAll('.verify-check').forEach(cb => {
+      cb.addEventListener('change', () => handleAdminAction(cb, 'verify'));
+    });
+    document.querySelectorAll('.purchase-check').forEach(cb => {
+      cb.addEventListener('change', () => handleAdminAction(cb, 'purchase'));
+    });
+    document.querySelectorAll('.resend-btn').forEach(btn => {
+      btn.addEventListener('click', () => resendVerifiedEmail(btn));
+    });
+  }catch(e){
+    document.getElementById('admin-loading').textContent = 'Could not load registrations.';
+  }
+}
+
+async function resendVerifiedEmail(btn){
+  if(btn.dataset.busy) return;
+  const id = btn.dataset.id;
+  if(!id) return;
+  if(!confirm('Re-send the verification email to this guest?')) return;
+  btn.dataset.busy = '1';
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.textContent = 'Sending...';
+  try{
+    const res = await fetch(SHEET_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'resend', id, key: ADMIN_PASSCODE })
+    });
+    const result = await res.json();
+    if(result && result.ok){
+      alert('Verification email re-sent.');
+    } else {
+      alert('Could not re-send — ' + ((result && result.error) || 'please try again.'));
+    }
+  }catch(e){
+    alert('Could not reach the server — please try again.');
+  }
+  delete btn.dataset.busy;
+  btn.disabled = false;
+  btn.textContent = original;
+}
+
+async function handleAdminAction(checkbox, action){
+  if(!checkbox.checked) return; // one-way: unchecking doesn't undo or resend
+  checkbox.disabled = true;
+
+  try{
+    const res = await fetch(SHEET_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action, id: checkbox.dataset.id, key: ADMIN_PASSCODE })
+    });
+    const result = await res.json();
+    if(!result.ok){
+      alert('Could not complete this — ' + ((result && result.error) || 'please try again.'));
+      checkbox.checked = false;
+      checkbox.disabled = false;
+    }
+  }catch(e){
+    alert('Could not reach the server — please try again.');
+    checkbox.checked = false;
+    checkbox.disabled = false;
+  }
+}
+
+</script>
+</body>
+</html>
+
